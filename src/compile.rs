@@ -3,7 +3,7 @@ use std::ops;
 
 pub enum Instruction {
     Literal(lisp::Object),
-    IntegerAdd,
+    FixnumAdd,
 }
 
 pub struct CompiledFunction {
@@ -55,7 +55,7 @@ impl CompiledFunction {
         for arg in args {
             self.compile(arg.shallow_copy())?;
         }
-        self.append_op(Instruction::IntegerAdd);
+        self.append_op(Instruction::FixnumAdd);
         Ok(())
     }
 }
@@ -91,15 +91,15 @@ mod test {
     fn simple_addition() {
         compile_and_execute_form(
             vec![lisp::Symbol::intern("+").into(),
-                 lisp::Object::Integer(3),
-                 lisp::Object::Integer(4)],
+                 lisp::Object::Fixnum(3),
+                 lisp::Object::Fixnum(4)],
             7,
         );
     }
     #[test]
     fn nested_addition() {
         let plus: lisp::Object = lisp::Symbol::intern("+").into();
-        let one = lisp::Object::Integer(1);
+        let one = lisp::Object::Fixnum(1);
         let form = vec![
             plus.shallow_copy(),
             one.shallow_copy(),

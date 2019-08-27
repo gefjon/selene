@@ -51,7 +51,7 @@ impl Thread {
         self.value_stack.pop().ok_or(err::Error::StackUnderflow)
     }
 
-    fn integer_add(&mut self) -> err::Result<()> {
+    fn fixnum_add(&mut self) -> err::Result<()> {
         use std::convert::TryInto;
         
         let first: lisp::Fixnum = self.pop()?.try_into()?;
@@ -64,7 +64,7 @@ impl Thread {
         use crate::compile::Instruction::*;
         match op {
             Literal(obj) => self.push(obj.shallow_copy()),
-            IntegerAdd => self.integer_add(),
+            FixnumAdd => self.fixnum_add(),
         }
     }
 }

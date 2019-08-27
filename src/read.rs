@@ -33,7 +33,7 @@ fn digit_to_int(c: char) -> u64 {
     }
 }
 
-fn hex_integer(s: &str) -> Result<u64> {
+fn hex_fixnum(s: &str) -> Result<u64> {
     let (rest, digits) = hex_digit1(s)?;
     let mut int = 0;
     for digit in digits.chars() {
@@ -48,7 +48,7 @@ fn sign(s: &str) -> Result<i64> {
          value(-1, char('-'))))(s)
 }
 
-fn decimal_integer(s: &str) -> Result<u64> {
+fn decimal_fixnum(s: &str) -> Result<u64> {
     let (rest, digits) = digit1(s)?;
     let mut int = 0;
     for digit in digits.chars() {
@@ -58,16 +58,16 @@ fn decimal_integer(s: &str) -> Result<u64> {
     Ok((rest, int))
 }
 
-fn signed_integer(s: &str) -> Result<i64> {
-    map(tuple((sign, decimal_integer)),
+fn signed_fixnum(s: &str) -> Result<i64> {
+    map(tuple((sign, decimal_fixnum)),
         |(sign, int)|
         if sign == -1 { (int as i64) * -1 } else { int as i64 })(s)
 }
 
-fn integer(s: &str) -> Result<i64> {
-    alt((map(preceded(tuple((char('0'), char('x'))), hex_integer),
+fn fixnum(s: &str) -> Result<i64> {
+    alt((map(preceded(tuple((char('0'), char('x'))), hex_fixnum),
              |i| i as i64),
-         signed_integer))(s)
+         signed_fixnum))(s)
 }
 
 macro_rules! map_object_from {
@@ -78,10 +78,10 @@ macro_rules! map_object_from {
     }
 }
 
-map_object_from!(integer, integer_obj);
+map_object_from!(fixnum, fixnum_obj);
 map_object_from!(symbol, symbol_obj);
 map_object_from!(list, list_obj);
 
 pub fn read(s: &str) -> Result<lisp::Object> {
-    token!(alt((list_obj, integer_obj, symbol_obj)))(s)
+    token!(alt((list_obj, fixnum_obj, symbol_obj)))(s)
 }

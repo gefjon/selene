@@ -5,7 +5,7 @@ use crate::{err, lisp};
 pub enum Object {
     Symbol(lisp::Symbol),
     List(lisp::List),
-    Integer(lisp::Fixnum),
+    Fixnum(lisp::Fixnum),
 }
 
 impl fmt::Display for Object {
@@ -13,7 +13,7 @@ impl fmt::Display for Object {
         match self {
             Object::Symbol(s) => fmt::Display::fmt(s, f),
             Object::List(l) => fmt::Display::fmt(l, f),
-            Object::Integer(i) => write!(f, "{:#x}", i),
+            Object::Fixnum(i) => write!(f, "{:#x}", i),
         }
     }
 }
@@ -32,7 +32,7 @@ impl From<lisp::List> for Object {
 
 impl From<lisp::Fixnum> for Object {
     fn from(n: lisp::Fixnum) -> Object {
-        Object::Integer(n)
+        Object::Fixnum(n)
     }
 }
 
@@ -46,7 +46,7 @@ impl Object {
 impl convert::TryFrom<lisp::Object> for lisp::Fixnum {
     type Error = err::TypeError;
     fn try_from(obj: lisp::Object) -> Result<Self, Self::Error> {
-        if let lisp::Object::Integer(i) = obj {
+        if let lisp::Object::Fixnum(i) = obj {
             Ok(i)
         } else {
             Err(err::TypeError {})
