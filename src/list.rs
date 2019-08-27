@@ -1,7 +1,8 @@
-use std::fmt::{self, Write};
+use std::{fmt::{self, Write}, ops};
 
 use crate::lisp;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct List {
     vec: Vec<lisp::Object>,
 }
@@ -23,5 +24,12 @@ impl fmt::Display for List {
 impl From<Vec<lisp::Object>> for List {
     fn from(vec: Vec<lisp::Object>) -> List {
         List { vec }
+    }
+}
+
+impl ops::Deref for List {
+    type Target = [lisp::Object];
+    fn deref(&self) -> &Self::Target {
+        &self.vec[..]
     }
 }

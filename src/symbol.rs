@@ -5,9 +5,9 @@ lazy_static! {
     static ref SYMBOLS: RwLock<HashSet<&'static str>> = RwLock::new(HashSet::new());
 }
 
-#[derive(Copy, Clone, Eq)]
+#[derive(Copy, Clone, Eq, Debug)]
 pub struct Symbol {
-    name: &'static str,
+    pub name: &'static str,
 }
 
 impl cmp::PartialEq<Symbol> for Symbol {

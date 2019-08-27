@@ -1,10 +1,11 @@
-use std::fmt;
-use crate::lisp;
+use std::{convert, fmt};
+use crate::{err, lisp};
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     Symbol(lisp::Symbol),
     List(lisp::List),
-    Integer(i64),
+    Integer(lisp::Fixnum),
 }
 
 impl fmt::Display for Object {
@@ -29,8 +30,26 @@ impl From<lisp::List> for Object {
     }
 }
 
-impl From<i64> for Object {
-    fn from(n: i64) -> Object {
+impl From<lisp::Fixnum> for Object {
+    fn from(n: lisp::Fixnum) -> Object {
         Object::Integer(n)
+    }
+}
+
+impl Object {
+    /// TODO: fix this to actually do a shallow copy
+    pub fn shallow_copy(&self) -> Self {
+        self.clone()
+    }
+}
+
+impl convert::TryFrom<lisp::Object> for lisp::Fixnum {
+    type Error = err::TypeError;
+    fn try_from(obj: lisp::Object) -> Result<Self, Self::Error> {
+        if let lisp::Object::Integer(i) = obj {
+            Ok(i)
+        } else {
+            Err(err::TypeError {})
+        }
     }
 }

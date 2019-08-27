@@ -2,27 +2,14 @@
 
 use std::io::{self, prelude::*};
 
+mod err;
 mod lisp;
 mod top_type;
 mod symbol;
 mod list;
 mod read;
 mod compile;
-
-mod err {
-    #[derive(Debug)]
-    pub enum Error {
-        Io(std::io::Error),
-    }
-
-    impl From<std::io::Error> for Error {
-        fn from(e: std::io::Error) -> Error {
-            Error::Io(e)
-        }
-    }
-    
-    pub type Result<T> = std::result::Result<T, Error>;
-}
+mod thread;
 
 fn prompt() -> io::Result<()> {
     print!("? ");
@@ -30,6 +17,7 @@ fn prompt() -> io::Result<()> {
 }
 
 fn main() -> err::Result<()> {
+    let mut main_thread = thread::Thread::default();
     let input_buffer = &mut String::new();
 
     prompt()?;
@@ -40,7 +28,7 @@ fn main() -> err::Result<()> {
             match read::read(input) {
                 Ok((rest, ast)) => {
                     input = rest;
-                    match eval(ast) {
+                    match main_thread.eval(ast) {
                         Ok(result) => println!("{}", result),
                         Err(eval_error) => eprintln!("eval_error: {:?}", eval_error),
                     }
@@ -55,14 +43,4 @@ fn main() -> err::Result<()> {
         prompt()?;
     }
     Ok(())
-}
-
-fn eval(it: lisp::Object) -> err::Result<lisp::Object> {
-    match it {
-        lisp::Object::List(l) => {
-            let f = compile::compile_form(l)?;
-            f.invoke()
-        }
-        _ => Ok(it),
-    }
 }
