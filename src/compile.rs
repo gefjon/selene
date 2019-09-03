@@ -1,5 +1,5 @@
 use crate::{lisp, err};
-use std::ops;
+use std::{convert::{TryInto, TryFrom}, ops};
 
 pub enum Instruction {
     Literal(lisp::Object),
@@ -17,9 +17,39 @@ impl ops::Deref for CompiledFunction {
     }
 }
 
-pub fn compile_function(form: lisp::List) -> err::Result<CompiledFunction> {
+fn special_toplevel_form_p(list: &[lisp::Object]) -> bool {
+    if let Some(sym) = list.get(0)
+        .map(lisp::Object::shallow_copy)
+        .and_then(|o| lisp::Symbol::try_from(o).ok()) {
+        match sym.name {
+            "defun" => true,
+            _ => false,
+        }
+    } else {
+        false
+    }
+}
+fn compile_special_toplevel_form(list: &lisp::List) -> err::Result<()> {
+    Ok(())
+}
+
+pub fn compile_toplevel_form(form: lisp::Object) -> err::Result<Option<CompiledFunction>> {
+    if let Ok(list) = lisp::List::try_from(form.shallow_copy()) {
+        if special_toplevel_form_p(&list) {
+            compile_special_toplevel_form(&list).map(|_| None)
+        } else {
+            compile_function(&[form]).map(|f| Some(f))
+        }
+    } else {
+        Err(err::type_error())
+    }
+}
+
+pub fn compile_function(body: &[lisp::Object]) -> err::Result<CompiledFunction> {
     let mut func = CompiledFunction::empty();
-    func.compile_form(form)?;
+    for form in body {
+        func.compile(form.shallow_copy())?;
+    }
     Ok(func)
 }
 
@@ -43,11 +73,16 @@ impl CompiledFunction {
     }
 
     fn compile_form(&mut self, form: lisp::List) -> err::Result<()> {
-        match form[0] {
-            lisp::Object::Symbol(lisp::Symbol {
-                name: "+"
-            }) => self.compile_addition(&form[1..]),
-            _ => Err(err::Error::UnknownCompilerForm(form)),
+        if let Some(lisp::Object::Symbol(lisp::Symbol {
+            name,
+            ..
+        })) = form.get(0) {
+            match *name {
+                "add" => self.compile_addition(&form[1..]),
+                _ => Err(err::Error::UnknownCompilerForm(form)),
+            }
+        } else {
+            Err(err::type_error())
         }
     }
     
@@ -90,7 +125,7 @@ mod test {
     #[test]
     fn simple_addition() {
         compile_and_execute_form(
-            vec![lisp::Symbol::intern("+").into(),
+            vec![lisp::Symbol::intern("add").into(),
                  lisp::Object::Fixnum(3),
                  lisp::Object::Fixnum(4)],
             7,
@@ -98,7 +133,7 @@ mod test {
     }
     #[test]
     fn nested_addition() {
-        let plus: lisp::Object = lisp::Symbol::intern("+").into();
+        let plus: lisp::Object = lisp::Symbol::intern("add").into();
         let one = lisp::Object::Fixnum(1);
         let form = vec![
             plus.shallow_copy(),

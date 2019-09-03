@@ -65,9 +65,8 @@ fn signed_fixnum(s: &str) -> Result<i64> {
 }
 
 fn fixnum(s: &str) -> Result<i64> {
-    alt((map(preceded(tuple((char('0'), char('x'))), hex_fixnum),
-             |i| i as i64),
-         signed_fixnum))(s)
+    map(preceded(tuple((char('0'), char('x'))), hex_fixnum),
+        |i| i as i64)(s)
 }
 
 macro_rules! map_object_from {

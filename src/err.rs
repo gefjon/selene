@@ -8,6 +8,10 @@ pub enum Error {
     TypeError(TypeError),
 }
 
+pub fn type_error() -> Error {
+    Error::TypeError(TypeError {})
+}
+
 #[derive(Clone, Debug)]
 pub struct TypeError {}
 

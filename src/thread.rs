@@ -33,12 +33,10 @@ impl Thread {
     }
 
     pub fn eval(&mut self, it: lisp::Object) -> err::Result<lisp::Object> {
-        match it {
-            lisp::Object::List(l) => {
-                let f = compile::compile_function(l)?;
-                self.invoke(&f)
-            }
-            _ => Ok(it),
+        if let Some(f) = compile::compile_toplevel_form(it)? {
+            self.invoke(&f)
+        } else {
+            Ok(lisp::Object::Nil)
         }
     }
 
