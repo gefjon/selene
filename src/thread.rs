@@ -16,6 +16,7 @@ impl Thread {
         &mut self,
         function: &compile::CompiledFunction,
     ) -> err::Result<lisp::Object> {
+        println!("invoking function {:?}", function);
         let _stack_count = self.value_stack.len();
         self.execute_function_body(function)?;
         debug_assert_eq!(_stack_count + 1, self.value_stack.len());

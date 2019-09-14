@@ -1,4 +1,4 @@
-use crate::lisp;
+use crate::lisp::{self, fxn};
 use nom::{
     IResult,
     sequence::{preceded, delimited, tuple},
@@ -24,49 +24,48 @@ fn symbol(s: &str) -> Result<lisp::Symbol> {
     map(alphanumeric1, lisp::Symbol::intern)(s)
 }
 
-fn digit_to_int(c: char) -> u64 {
+fn digit_to_int(c: char) -> lisp::Fixnum {
     match c {
-        '0' ..= '9' => { (c as u64) - ('0' as u64) }
-        'a' ..= 'f' => { (c as u64) - ('a' as u64) + 0xa }
-        'A' ..= 'F' => { (c as u64) - ('A' as u64) + 0xa }
+        '0' ..= '9' => { lisp::Fixnum::from(c) - lisp::Fixnum::from('0') }
+        'a' ..= 'f' => { lisp::Fixnum::from(c) - lisp::Fixnum::from('a') + fxn(0xa) }
+        'A' ..= 'F' => { lisp::Fixnum::from(c) - lisp::Fixnum::from('A') + fxn(0xa) }
         _ => unreachable!(),
     }
 }
 
-fn hex_fixnum(s: &str) -> Result<u64> {
+fn hex_fixnum(s: &str) -> Result<lisp::Fixnum> {
     let (rest, digits) = hex_digit1(s)?;
-    let mut int = 0;
+    let mut int = fxn(0);
     for digit in digits.chars() {
-        int *= 0x10;
+        int *= fxn(0x10);
         int += digit_to_int(digit);
     }
     Ok((rest, int))
 }
 
-fn sign(s: &str) -> Result<i64> {
-    alt((value(0, char('+')),
-         value(-1, char('-'))))(s)
+fn sign(s: &str) -> Result<lisp::Fixnum> {
+    alt((value(fxn(0), char('+')),
+         value(fxn(-1), char('-'))))(s)
 }
 
-fn decimal_fixnum(s: &str) -> Result<u64> {
+fn decimal_fixnum(s: &str) -> Result<lisp::Fixnum> {
     let (rest, digits) = digit1(s)?;
-    let mut int = 0;
+    let mut int = fxn(0);
     for digit in digits.chars() {
-        int *= 10;
+        int *= fxn(10);
         int += digit_to_int(digit);
     }
     Ok((rest, int))
 }
 
-fn signed_fixnum(s: &str) -> Result<i64> {
+fn signed_fixnum(s: &str) -> Result<lisp::Fixnum> {
     map(tuple((sign, decimal_fixnum)),
         |(sign, int)|
-        if sign == -1 { (int as i64) * -1 } else { int as i64 })(s)
+        if sign == fxn(-1) { int * fxn(-1) } else { int })(s)
 }
 
-fn fixnum(s: &str) -> Result<i64> {
-    map(preceded(tuple((char('0'), char('x'))), hex_fixnum),
-        |i| i as i64)(s)
+fn fixnum(s: &str) -> Result<lisp::Fixnum> {
+    preceded(tuple((char('0'), char('x'))), hex_fixnum)(s)
 }
 
 macro_rules! map_object_from {

@@ -1,11 +1,13 @@
-use crate::{lisp, err};
+use crate::{lisp::{self, fxn}, err};
 use std::{convert::{TryInto, TryFrom}, ops};
 
+#[derive(Debug)]
 pub enum Instruction {
     Literal(lisp::Object),
     FixnumAdd,
 }
 
+#[derive(Debug)]
 pub struct CompiledFunction {
     body: Vec<Instruction>,
 }
@@ -110,7 +112,7 @@ mod test {
         let form = form.into();
         let expected_result = expected_result.into();
         
-        let compiled = compile_function(form.clone()).expect("compiler error");
+        let compiled = compile_function(&[form.clone().into()]).expect("compiler error");
         let mut thread = crate::thread::Thread::default();
         let real_result = thread.invoke(&compiled).expect("evaluation error");
         if real_result != expected_result {
@@ -126,15 +128,15 @@ mod test {
     fn simple_addition() {
         compile_and_execute_form(
             vec![lisp::Symbol::intern("add").into(),
-                 lisp::Object::Fixnum(3),
-                 lisp::Object::Fixnum(4)],
-            7,
+                 lisp::Object::Fixnum(fxn(3)),
+                 lisp::Object::Fixnum(fxn(4))],
+            fxn(7),
         );
     }
     #[test]
     fn nested_addition() {
         let plus: lisp::Object = lisp::Symbol::intern("add").into();
-        let one = lisp::Object::Fixnum(1);
+        let one = lisp::Object::Fixnum(fxn(1));
         let form = vec![
             plus.shallow_copy(),
             one.shallow_copy(),
@@ -145,6 +147,6 @@ mod test {
             ]).into(),
         ];
 
-        compile_and_execute_form(form, 3);
+        compile_and_execute_form(form, fxn(3));
     }
 }

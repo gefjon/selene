@@ -4,6 +4,7 @@ use std::io::{self, prelude::*};
 
 mod err;
 mod lisp;
+mod fixnum;
 mod top_type;
 mod symbol;
 mod list;
